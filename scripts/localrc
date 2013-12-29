@@ -1,0 +1,10 @@
+ADMIN_PASSWORD=pass
+MYSQL_PASSWORD=pass
+RABBIT_PASSWORD=pass
+SERVICE_PASSWORD=pass
+#ENABLED_SERVICES+=,savanna
+ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
+SCREEN_LOGDIR=/var/log/openstack
+LOG_COLOR=True
+VERBOSE=True
+VIRT_DRIVER=docker

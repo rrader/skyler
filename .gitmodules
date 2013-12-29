@@ -1,0 +1,9 @@
+[submodule "cookbooks/git"]
+	path = cookbooks/git
+	url = https://github.com/opscode-cookbooks/git.git
+[submodule "cookbooks/vim"]
+	path = cookbooks/vim
+	url = https://github.com/opscode-cookbooks/vim.git
+[submodule "cookbooks/cookbook-devstack"]
+	path = cookbooks/cookbook-devstack
+	url = https://github.com/torandu/cookbook-devstack.git

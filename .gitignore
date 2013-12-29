@@ -2,3 +2,6 @@
 .cache
 .idea
 *.pyc
+dynokeys*
+known_hosts
+authorized_keys

@@ -11,11 +11,13 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :virtualbox do |v|
     v.customize ["modifyvm", :id, "--memory", "2048"]
-    v.name = "Skyler-Devstack"
     v.gui = true
   end
 
   config.vm.provision "shell",
     path: "scripts/openstack.sh"
+
+  config.vm.provision "shell",
+    path: "scripts/docker-images.sh"
 
 end

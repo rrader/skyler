@@ -8,3 +8,5 @@ SCREEN_LOGDIR=/var/log/openstack
 LOG_COLOR=True
 VERBOSE=True
 VIRT_DRIVER=docker
+RECLONE=no
+PUBLIC_INTERFACE=eth1

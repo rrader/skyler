@@ -1,5 +1,7 @@
 # Skyler
 
+Openstack/Vagrant configuration based on https://github.com/petro-rudenko/openstack-savana-docker-sandbox
+
 PaaS prototype based on OpenStack + Heat and Docker
 
 ## Usage

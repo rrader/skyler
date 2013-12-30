@@ -8,6 +8,6 @@ RUN /bin/bash /tmp/setup.sh
 
 ADD start.sh /var/lib/skyler/
 
-EXPOSE 22 80
+EXPOSE 22
 
 CMD ["/bin/bash", "/var/lib/skyler/start.sh"]

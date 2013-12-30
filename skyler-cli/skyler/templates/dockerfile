@@ -1,0 +1,10 @@
+FROM    {base_image}
+
+EXPOSE 8000
+
+ADD {packed_env} /var/lib/skyler/app.tgz
+ADD {run_script} /var/lib/skyler/init.d/
+ADD {setup_script} /tmp/
+RUN /bin/bash /tmp/{setup_script}
+
+CMD ["/bin/bash", "/var/lib/skyler/start.sh"]

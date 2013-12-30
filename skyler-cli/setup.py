@@ -10,8 +10,12 @@ setup(name='skyler-cli',
       url='https://github.com/antigluk/skyler',
       packages=['skyler'],
       install_requires=['cement==2.0.2',
-                        'SQLAlchemy==0.8.4',
-                        'texttable==0.8.1',
+                        'SQLAlchemy>=0.8.4',
+                        'texttable>=0.8.1',
+                        'python-heatclient>=0.2.6',
+                        'python-keystoneclient>=0.4.1',
+                        'docker-py>=0.2.3',
+                        'six==1.4.0'
       ],
       entry_points={
           'console_scripts': [

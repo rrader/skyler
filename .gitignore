@@ -5,3 +5,7 @@
 dynokeys*
 known_hosts
 authorized_keys
+build
+dist
+venv
+*.egg-info

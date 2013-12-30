@@ -5,7 +5,7 @@ import tempfile
 from cement.core.backend import minimal_logger
 from db import Session, Deployment, Application
 import tarfile
-from dockertemplate import Docker
+from docker_client import Docker
 from utils import SkylerException
 
 log = minimal_logger(__name__)

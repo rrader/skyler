@@ -7,9 +7,10 @@ Parameters: {{}}
 
 Resources:
     web:
-        Type: OS::Heat::Docker
+        Type: OS::Nova::Server
         Properties:
-            Image: {image_name}
+            image: "{image_name}:latest"
+            flavor: "m1.micro"
 
 Outputs:
     AppURL:

@@ -87,7 +87,7 @@ class ApplicationBuildController(controller.CementBaseController):
             self.log.error('No application found')
             raise SkylerException("No application found")
         runtime_name = file(os.path.join(app.source, 'runtime.txt')).read().strip()
-        rt = getattr(__import__('runtime.{}'.format(runtime_name)), runtime_name)
+        rt = getattr(__import__('skyler.runtime', fromlist=[runtime_name]), runtime_name)
         runtime = rt.Runtime(app.name)
         runtime.start_deploy()
 

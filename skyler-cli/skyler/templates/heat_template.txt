@@ -1,0 +1,22 @@
+HeatTemplateFormatVersion: {date:%Y-%m-%d}
+
+Description:
+    Stack for <{name}> deployment #{deployment_id}
+
+Parameters: {{}}
+
+Resources:
+    web:
+        Type: OS::Heat::Docker
+        Properties:
+            Image: {image_name}
+
+Outputs:
+    AppURL:
+        Value:
+            {{"Fn::Join": ["",
+                ["http://",
+                {{"Fn::GetAtt": ["web", "NetworkIp"]}}, ":",
+                "8000", "/"]
+            ]}}
+        Description: Application URL

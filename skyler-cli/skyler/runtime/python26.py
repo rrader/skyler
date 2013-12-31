@@ -1,9 +1,10 @@
 import shutil
+import datetime
 from conf import CONFIG
 import os
 import tempfile
 from cement.core.backend import minimal_logger
-from db import Session, Deployment, Application
+from db import Session, Deployment, Application, DEPLOYMENT_STATE_STARTED, DEPLOYMENT_STATE_BUILT_OK
 import tarfile
 from docker_client import Docker
 from utils import SkylerException
@@ -14,7 +15,7 @@ log = minimal_logger(__name__)
 class Runtime(object):
     def __init__(self, application_name):
         session = Session()
-        self.application = session.query(Application).\
+        self.application = session.query(Application). \
             filter(Application.name == application_name).first()
         if not self.application:
             log.error("No application found")
@@ -62,7 +63,8 @@ class Runtime(object):
 
     def start_deploy(self):
         session = Session()
-        d = Deployment(application_id=self.application.id)
+        d = Deployment(application_id=self.application.id,
+                       state=DEPLOYMENT_STATE_STARTED)
         session.add(d)
         session.commit()
         self.deployment = d
@@ -75,13 +77,14 @@ class Runtime(object):
         b_dir = self.build_templates('web')
         self.build_image(b_dir, 'web')
 
+        d.state = DEPLOYMENT_STATE_BUILT_OK
         session.add(d)
         session.commit()
 
     def inspect_env(self):
         ret = {}
         procfile = file(os.path.join(self.application.source, 'Procfile')).readlines()
-        for name, cmd in ((x[:x.find(':')], x[x.find(':')+1:]) for x in procfile):
+        for name, cmd in ((x[:x.find(':')], x[x.find(':') + 1:]) for x in procfile):
             ret[name.strip()] = cmd.strip()
         return ret
 

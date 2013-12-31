@@ -1,8 +1,9 @@
+import datetime
 import os
 from cement.core import controller
-from db import Application, Session, Deployment
 from texttable import Texttable
 from utils import SkylerException
+from db import Application, Session, Deployment, DEPLOYMENT_STATE_READABLE, DEPLOYMENT_STATE_BUILT_OK, DEPLOYMENT_STATE_SUCCESSFUL
 
 
 class ApplicationListController(controller.CementBaseController):
@@ -37,11 +38,11 @@ class ApplicationHistoryController(controller.CementBaseController):
         self.log.info('List deployments')
         table = Texttable()
         session = Session()
-        table.add_row(('deployment', 'app', 'image', 'created'))
-        for depl in session.query(Deployment).\
-            join(Application).filter(Application.name == self.pargs.name).all():
-
-            table.add_row((depl.id, depl.application.name, depl.image, depl.created))
+        table.add_row(('deployment', 'app', 'image', 'created', 'state'))
+        for d in session.query(Deployment). \
+                join(Application).filter(Application.name == self.pargs.name).all():
+            table.add_row((d.id, d.application.name, d.image, d.created,
+                           DEPLOYMENT_STATE_READABLE[d.state]))
         print table.draw()
 
 
@@ -54,7 +55,7 @@ class ApplicationCreationController(controller.CementBaseController):
 
         arguments = [
             (['name'], dict(action='store', help='Application name')),
-            (['source'], dict(action='store', help='Source directory')),  # TODO: change to git repo
+            (['source'], dict(action='store', help='Source directory')), # TODO: change to git repo
         ]
 
     @controller.expose(help='Create new Skyler app')
@@ -64,6 +65,31 @@ class ApplicationCreationController(controller.CementBaseController):
         app = Application(name=self.pargs.name, source=self.pargs.source)
         session.add(app)
         session.commit()
+
+
+class ApplicationBuildController(controller.CementBaseController):
+    class Meta:
+        label = 'build'
+        description = 'build machines'
+
+        config_defaults = dict()
+
+        arguments = [
+            (['name'], dict(action='store', help='Application name')),
+        ]
+
+    @controller.expose(help='Build your Skyler app')
+    def default(self):
+        self.log.info('Building stack')
+        session = Session()
+        app = session.query(Application).filter(Application.name == self.pargs.name).first()
+        if not app:
+            self.log.error('No application found')
+            raise SkylerException("No application found")
+        runtime_name = file(os.path.join(app.source, 'runtime.txt')).read().strip()
+        rt = getattr(__import__('runtime.{}'.format(runtime_name)), runtime_name)
+        runtime = rt.Runtime(app.name)
+        runtime.start_deploy()
 
 
 class ApplicationSpinUpController(controller.CementBaseController):
@@ -77,16 +103,42 @@ class ApplicationSpinUpController(controller.CementBaseController):
             (['name'], dict(action='store', help='Application name')),
         ]
 
-    @controller.expose(help='Create new Skyler app')
+    @controller.expose(help='Spin up your app!')
     def default(self):
-        self.log.info('Spinning up stack')
         session = Session()
-        app = session.query(Application).filter(Application.name == self.pargs.name).first()
-        if not app:
-            self.log.error('No application found')
-            raise SkylerException("No application found")
-        runtime_name = file(os.path.join(app.source, 'runtime.txt')).read().strip()
-        rt = getattr(__import__('runtime.{}'.format(runtime_name)), runtime_name)
-        runtime = rt.Runtime(app.name)
-        runtime.start_deploy()
+        d = session.query(Deployment).join(Application).filter(Application.name == self.pargs.name)
+        d = d.filter(Deployment.state == DEPLOYMENT_STATE_BUILT_OK)
+        d = d.order_by(Deployment.id.desc())
+        target = d.first()
+        if not target:
+            self.log.error('No successful builds found')
+            raise SkylerException("No successful builds found")
+        self.log.info('Last successful build #{}'.format(target.id))
 
+        heat = Heat().client
+        #print(heat.stacks)
+
+        heatfile = os.path.join(CONFIG.get('base', 'templates'), 'heat_template.txt')
+        params = {'date': datetime.datetime.now(),
+                  'image_name': target.image,
+                  'name': target.application.name,
+                  'deployment_id': target.id
+                  }
+        heat_template = file(heatfile).read()
+        heat_content = heat_template.format(**params)
+
+        with file('/tmp/heattemplate.txt', 'w') as f:
+            f.write(heat_content)
+        stack_name = '{}_d{}'.format(target.application.name, target.id)
+        #target.stack_name = stack_name
+        target.state = DEPLOYMENT_STATE_SUCCESSFUL
+        session.add(target)
+        self.log.info('Spinning up {}...'.format(stack_name))
+        heat.stacks.create(stack_name=stack_name,
+                           template=heat_content,
+                           timeout_mins=60)
+        session.close()
+        self.log.info('Done')
+
+from heat_client import Heat
+from conf import CONFIG

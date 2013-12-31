@@ -21,6 +21,12 @@ class Application(Base):
     history = relationship("Deployment")
 
 
+DEPLOYMENT_STATE_STARTED, DEPLOYMENT_STATE_BUILT_OK, DEPLOYMENT_STATE_SUCCESSFUL = range(3)
+DEPLOYMENT_STATE_READABLE = {DEPLOYMENT_STATE_STARTED: 'started',
+                             DEPLOYMENT_STATE_BUILT_OK: 'built',
+                             DEPLOYMENT_STATE_SUCCESSFUL: 'successful'}
+
+
 class Deployment(Base):
     __tablename__ = 'deployments_history'
 
@@ -28,7 +34,9 @@ class Deployment(Base):
     application = relationship("Application")
     application_id = Column(Integer, ForeignKey('applications.id'))
     image = Column(String)
+    #stack_name = Column(String)
     created = Column(DateTime, default=datetime.datetime.now)
+    state = Column(Integer)
 
 
 class InitDBController(controller.CementBaseController):

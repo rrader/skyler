@@ -20,5 +20,6 @@ class Heat(object):
                                          password=CONFIG.get('keystone', 'password'),
                                          tenant_name=CONFIG.get('keystone', 'tenant'))
 
-        self._client = Client('1', endpoint=CONFIG.get('base', 'heat_endpoint'),
+        self._client = Client('1', endpoint="{}/{}".format(CONFIG.get('base', 'heat_endpoint'),
+                                                              self._keystone.tenant_id),
                               token=self._keystone.auth_token)

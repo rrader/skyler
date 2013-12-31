@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-from application import ApplicationListController, ApplicationCreationController, ApplicationSpinUpController, ApplicationHistoryController
 
 from cement.core import foundation, controller, handler
-from db import InitDBController
 
 
 class SkylerBaseController(controller.CementBaseController):
@@ -22,12 +20,17 @@ class Skyler(foundation.CementApp):
 
 
 def main():
+    from application import ApplicationListController, ApplicationCreationController, ApplicationBuildController, \
+        ApplicationHistoryController, ApplicationSpinUpController
+    from db import InitDBController
+
     app = Skyler('skyler')
     handler.register(ApplicationListController)
     handler.register(ApplicationCreationController)
     handler.register(InitDBController)
-    handler.register(ApplicationSpinUpController)
+    handler.register(ApplicationBuildController)
     handler.register(ApplicationHistoryController)
+    handler.register(ApplicationSpinUpController)
     try:
         app.setup()
         app.run()

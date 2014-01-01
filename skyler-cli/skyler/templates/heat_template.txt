@@ -10,14 +10,14 @@ Resources:
         Type: OS::Nova::Server
         Properties:
             image: "{image_name}:latest"
-            flavor: "m1.micro"
+            flavor: "m1.nano"
 
 Outputs:
     AppURL:
         Value:
             {{"Fn::Join": ["",
                 ["http://",
-                {{"Fn::GetAtt": ["web", "NetworkIp"]}}, ":",
+                {{"Fn::GetAtt": ["web", "first_address"]}}, ":",
                 "8000", "/"]
             ]}}
         Description: Application URL

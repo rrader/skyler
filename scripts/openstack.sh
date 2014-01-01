@@ -28,12 +28,12 @@ else
     echo "export PS1='[\u@\h \W(keystone_admin)]\$ '" >> openrc
     #Docker plugin for Heat
 
-    mkdir /var/lib/heat
-    chown stack:stack -R /var/lib/heat
+    mkdir /usr/lib/heat
+    chown stack:stack -R /usr/lib/heat
     su - stack -c"mkdir -p /opt/stack/heat"
     cd /opt/stack
     su - stack -c"git clone https://github.com/dotcloud/openstack-heat-docker.git"
-    su - stack -c"ln -sf $(cd openstack-heat-docker/plugin; pwd) /var/lib/heat/docker"
+    su - stack -c"ln -sf $(cd openstack-heat-docker/plugin; pwd) /usr/lib/heat/docker"
 
     su - stack -c"cd /opt/devstack && source openrc && nova keypair-add default > default.pem && chmod 600 default.pem"
 

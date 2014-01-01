@@ -49,6 +49,7 @@ else
     cd /vagrant/skyler-cli/
     pip install -e .
     skyler init
+    skyler create-app example /vagrant/examples/flaskexample
 
     touch /opt/openstack-installed
 fi

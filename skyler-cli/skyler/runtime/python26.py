@@ -1,17 +1,16 @@
 import shutil
 import datetime
+import logging
 import os
 import tempfile
 import tarfile
-
-from cement.core.backend import minimal_logger
 
 from skyler.conf import CONFIG
 from skyler.db import Session, Deployment, Application, DEPLOYMENT_STATE_STARTED, DEPLOYMENT_STATE_BUILT_OK
 from skyler.docker_client import Docker
 from skyler.utils import SkylerException
 
-log = minimal_logger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Runtime(object):

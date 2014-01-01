@@ -1,4 +1,7 @@
 import datetime
+from clients.keystone_client import Keystone
+from clients.neutron_client import Neutron
+from netaddr import IPNetwork
 import os
 from cement.core import controller
 from texttable import Texttable
@@ -18,9 +21,9 @@ class ApplicationListController(controller.CementBaseController):
         self.log.info('List applications')
         table = Texttable()
         session = Session()
-        table.add_row(('id', 'name', 'source'))
+        table.add_row(('id', 'name', 'source', 'network-id'))
         for app in session.query(Application).all():
-            table.add_row((app.id, app.name, app.source))
+            table.add_row((app.id, app.name, app.source, app.network_id))
         print table.draw()
 
 
@@ -40,7 +43,7 @@ class ApplicationHistoryController(controller.CementBaseController):
         session = Session()
         table.add_row(('deployment', 'app', 'image', 'created', 'state'))
         for d in session.query(Deployment). \
-                join(Application).filter(Application.name == self.pargs.name).all():
+            join(Application).filter(Application.name == self.pargs.name).all():
             table.add_row((d.id, d.application.name, d.image, d.created,
                            DEPLOYMENT_STATE_READABLE[d.state]))
         print table.draw()
@@ -103,42 +106,75 @@ class ApplicationSpinUpController(controller.CementBaseController):
             (['name'], dict(action='store', help='Application name')),
         ]
 
-    @controller.expose(help='Spin up your app!')
-    def default(self):
-        session = Session()
-        d = session.query(Deployment).join(Application).filter(Application.name == self.pargs.name)
-        d = d.filter(Deployment.state == DEPLOYMENT_STATE_BUILT_OK)
-        d = d.order_by(Deployment.id.desc())
-        target = d.first()
-        if not target:
-            self.log.error('No successful builds found')
-            raise SkylerException("No successful builds found")
-        self.log.info('Last successful build #{}'.format(target.id))
-
-        heat = Heat().client
-        #print(heat.stacks)
-
+    def spin_up(self):
+        session, target = self.get_deployment()
+        heat = Heat.client
         heatfile = os.path.join(CONFIG.get('base', 'templates'), 'heat_template.txt')
+
+        neutron = Neutron.client
+        network = filter(lambda x: x['name'] == CONFIG.get('base', 'network'),
+                         neutron.list_networks()['networks'])[0]
+
         params = {'date': datetime.datetime.now(),
                   'image_name': target.image,
                   'name': target.application.name,
-                  'deployment_id': target.id
-                  }
+                  'deployment_id': target.id,
+                  'subnet': target.application.network_id,
+                  'network': network['id']
+        }
         heat_template = file(heatfile).read()
         heat_content = heat_template.format(**params)
-
-        with file('/tmp/heattemplate.txt', 'w') as f:
-            f.write(heat_content)
         stack_name = '{}_d{}'.format(target.application.name, target.id)
-        #target.stack_name = stack_name
-        target.state = DEPLOYMENT_STATE_SUCCESSFUL
+        target.stack_name = stack_name
+        #target.state = DEPLOYMENT_STATE_SUCCESSFUL
         session.add(target)
         self.log.info('Spinning up {}...'.format(stack_name))
         heat.stacks.create(stack_name=stack_name,
                            template=heat_content,
                            timeout_mins=60)
-        session.close()
+        session.commit()
+
+    def get_deployment(self):
+        session = Session()
+        d = session.query(Deployment).join(Application).filter(Application.name == self.pargs.name)
+        d = d.filter(Deployment.state == DEPLOYMENT_STATE_BUILT_OK)
+        d = d.order_by(Deployment.id.desc())
+        target = d.first()
+        return session, target
+
+    @controller.expose(help='Spin up your app!')
+    def default(self):
+        session, target = self.get_deployment()
+
+        if not target:
+            self.log.error('No successful builds found')
+            raise SkylerException("No successful builds found")
+        self.log.info('Last successful build #{}'.format(target.id))
+
+        if not target.application.network_id:
+            next_id = Neutron.find_new_id()
+            neutron = Neutron.client
+            net = IPNetwork(CONFIG.get('base', 'cidr_start')).next(next_id)
+
+            network = filter(lambda x: x['name'] == CONFIG.get('base', 'network'),
+                             neutron.list_networks()['networks'])[0]
+            subnet_name = 'sky-{}'.format(target.application.name)
+            self.log.info('Creating subnet {}'.format(subnet_name))
+            ret = neutron.create_subnet(body=dict(subnet=dict(name=subnet_name,
+                                                              network_id=network['id'],
+                                                              ip_version='4',
+                                                              cidr=str(net),
+                                                              tenant_id=network['tenant_id'])))
+            session = Session()
+            app = session.query(Application).filter(Application.id == target.id).first()
+            app.network_id = ret['subnet']['id']
+            session.add(app)
+            self.log.info('Subnet {} created'.format(app.network_id))
+            session.commit()
+
+        self.spin_up()
         self.log.info('Done')
 
-from heat_client import Heat
+
+from clients.heat_client import Heat
 from conf import CONFIG

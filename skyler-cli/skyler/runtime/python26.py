@@ -1,14 +1,14 @@
 import shutil
-import datetime
 import logging
-import os
 import tempfile
 import tarfile
 
+import os
 from skyler.conf import CONFIG
 from skyler.db import Session, Deployment, Application, DEPLOYMENT_STATE_STARTED, DEPLOYMENT_STATE_BUILT_OK
-from skyler.docker_client import Docker
+from skyler.clients.docker_client import Docker
 from skyler.utils import SkylerException
+
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ class Runtime(object):
 
     def build_image(self, b_dir, config):
         log.info('building image...')
-        docker = Docker().client
+        docker = Docker.client
         template = '{}_{}_d{}'.format(
             self.application.name, config, self.deployment.id)
         new_image = docker.build(b_dir, template)[0]

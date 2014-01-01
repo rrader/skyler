@@ -8,7 +8,7 @@ set -x
 # The metadata service is always available under the magic IP 169.254.169.254. It delivers a data blob.
 # Our container assumes that the user data is a rc file which can be sourced by the main process. 
 
-echo "== Openstack network configuration. Note: Containers expect to be in a 10.0.0.0/24 nova network. =="
+echo "== Openstack network configuration. Note: Containers expect to be in a 10.0.1.0/24 nova network. =="
 
 # Hack: In order to receive data from the metadata service we must make sure we resolve the data via our nova network.
 #
@@ -30,8 +30,8 @@ echo "Device $NOVA_NIC found. Wait until ready."
 sleep 3
 
 # Setup a network route to insure we use the nova network.
-echo "[INFO] Create default route for $NOVA_NIC. Gateway 10.0.0.1"
-ip r r default via 10.0.0.1 dev $NOVA_NIC
+echo "[INFO] Create default route for $NOVA_NIC. Gateway 10.0.1.1"
+ip r r default via 10.0.1.1 dev $NOVA_NIC
 ip l set down dev eth0
 
 echo "[INFO] Start Cloud init"

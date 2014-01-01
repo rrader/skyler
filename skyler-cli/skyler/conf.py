@@ -10,6 +10,11 @@ defaults['base']['heat_endpoint'] = 'http://10.0.2.15:8004/v1'
 defaults['base']['templates'] = '/vagrant/skyler-cli/skyler/templates'
 defaults['base']['docker-registry'] = 'localhost:5042'
 
+defaults['base']['neutron_endpoint'] = 'http://localhost:9696/'
+defaults['base']['network'] = 'sky-net'
+defaults['base']['cidr_start'] = '10.0.1.0/28'
+
+# TODO: remove this from conf, read from env vars
 defaults['keystone']['auth_url'] = 'http://localhost:35357/v2.0'
 defaults['keystone']['username'] = 'admin'
 defaults['keystone']['password'] = 'pass'

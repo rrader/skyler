@@ -19,6 +19,8 @@ class Application(Base):
     source = Column(String)  # for now - just directory name
     runtime = Column(String)
     history = relationship("Deployment")
+    network_id = Column(String, nullable=True, default=None)
+
 
 
 DEPLOYMENT_STATE_STARTED, DEPLOYMENT_STATE_BUILT_OK, DEPLOYMENT_STATE_SUCCESSFUL = range(3)
@@ -34,7 +36,7 @@ class Deployment(Base):
     application = relationship("Application")
     application_id = Column(Integer, ForeignKey('applications.id'))
     image = Column(String)
-    #stack_name = Column(String)
+    stack_name = Column(String)
     created = Column(DateTime, default=datetime.datetime.now)
     state = Column(Integer)
 

@@ -26,8 +26,9 @@ else
     echo "export OS_PASSWORD=pass" >> openrc
     echo "export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/" >> openrc
     echo "export PS1='[\u@\h \W(keystone_admin)]\$ '" >> openrc
-    #Docker plugin for Heat
 
+    #Docker plugin for Heat
+    # TODO: remove this plugin (it works without Nova that is not appropriate)
     mkdir /usr/lib/heat
     chown stack:stack -R /usr/lib/heat
     su - stack -c"mkdir -p /opt/stack/heat"
@@ -37,6 +38,15 @@ else
 
     su - stack -c"cd /opt/devstack && source openrc && nova keypair-add default > default.pem && chmod 600 default.pem"
 
+    export OS_TENANT_NAME=demo
+    export OS_USERNAME=admin
+    export OS_PASSWORD=pass
+    export OS_AUTH_URL=http://127.0.0.1:5000/v2.0
+
+    # create neutron network
+    neutron net-create sky-net
+
+    # install skyler
     mkdir /var/lib/skyler
     chown stack:stack -R /var/lib/skyler
 
@@ -50,6 +60,15 @@ else
     pip install -e .
     skyler init
     skyler create-app example /vagrant/examples/flaskexample
+
+    # kill me. don't ask me how I've googled it
+    # https://www.mail-archive.com/openstack@lists.launchpad.net/msg21895.html
+    modprobe -r bridge || true
+    apt-get -y install openvswitch-switch openvswitch-controller openvswitch-brcompat
+    echo "blacklist bridge" > /etc/modprobe.d/bridge.conf
+    echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
+    service openvswitch-switch restart
+    service docker restart
 
     touch /opt/openstack-installed
 fi

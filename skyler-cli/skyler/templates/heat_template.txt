@@ -11,6 +11,24 @@ Resources:
         Properties:
             image: "{image_name}:latest"
             flavor: "m1.nano"
+            networks: [ {{network: {network} }} ]
+
+    pool:
+        Type: OS::Neutron::Pool
+        Properties:
+            name: {name}_pool
+            protocol: HTTP
+            subnet_id: {subnet}
+            lb_method: ROUND_ROBIN
+            vip:
+                protocol_port: 8000
+
+    load_balancer:
+        Type: OS::Neutron::LoadBalancer
+        Properties:
+            pool_id: {{ "Ref": "pool" }}
+            protocol_port: 80
+            members: [ {{get_resource: web}} ]
 
 Outputs:
     AppURL:

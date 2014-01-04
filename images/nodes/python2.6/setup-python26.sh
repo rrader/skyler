@@ -3,4 +3,4 @@ set -x
 
 yum install -y python-setuptools
 easy_install pip
-pip install virtualenv
+pip install virtualenv --no-use-wheel -v

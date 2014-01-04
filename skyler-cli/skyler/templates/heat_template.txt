@@ -13,6 +13,14 @@ Resources:
             flavor: "m1.nano"
             networks: [ {{network: {network} }} ]
 
+    monitor:
+        Type: OS::Neutron::HealthMonitor
+        Properties:
+            type: HTTP
+            delay: 3
+            max_retries: 5
+            timeout: 10
+
     pool:
         Type: OS::Neutron::Pool
         Properties:
@@ -20,6 +28,7 @@ Resources:
             protocol: HTTP
             subnet_id: {subnet}
             lb_method: ROUND_ROBIN
+            monitors: [ {{ "Ref": "monitor" }} ]
             vip:
                 protocol_port: 8000
 
@@ -27,15 +36,15 @@ Resources:
         Type: OS::Neutron::LoadBalancer
         Properties:
             pool_id: {{ "Ref": "pool" }}
-            protocol_port: 80
-            members: [ {{get_resource: web}} ]
+            protocol_port: 8000
+            members: [ {{ "Ref": "web" }} ]
 
 Outputs:
     AppURL:
         Value:
             {{"Fn::Join": ["",
                 ["http://",
-                {{"Fn::GetAtt": ["web", "first_address"]}}, ":",
+                {{"Fn::GetAtt": ["pool", "first_address"]}}, ":",
                 "8000", "/"]
             ]}}
         Description: Application URL

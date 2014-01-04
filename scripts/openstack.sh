@@ -6,9 +6,27 @@ if [[ -f /opt/openstack-installed ]]; then
     su - stack -c"bash /opt/devstack/rejoin-stack.sh"
 else
     apt-get update
-    apt-get -y install curl git wget
+    apt-get -y install curl git wget socat
+
+
+    # kill me. don't ask me how I've googled it
+    # https://www.mail-archive.com/openstack@lists.launchpad.net/msg21895.html
+    modprobe -r bridge || true
+    apt-get -y install openvswitch-switch openvswitch-controller openvswitch-brcompat
+    echo "blacklist bridge" > /etc/modprobe.d/bridge.conf
+    echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
+
+    # http://www.brucemartins.com/2013_10_01_archive.html
+    apt-get install -y openvswitch-datapath-source
+    module-assistant auto-install openvswitch-datapath --non-inter --quiet  # FIXME: no tty
+    modprobe -r bridge || true
+    service openvswitch-switch restart
+
+
+
     cd /opt;
     git clone https://github.com/openstack-dev/devstack.git; cd devstack
+    git checkout stable/havana
     source lib/nova_plugins/hypervisor-docker
     if [[ ! -r /vagrant/.cache/docker-registry.tar.gz ]]; then
         wget -O /vagrant/.cache/docker-registry.tar.gz ${DOCKER_REGISTRY_IMAGE};
@@ -44,7 +62,8 @@ else
     export OS_AUTH_URL=http://127.0.0.1:5000/v2.0
 
     # create neutron network
-    neutron net-create sky-net
+    # FIXME: for now disabled
+    # neutron net-create sky-net
 
     # install skyler
     mkdir /var/lib/skyler
@@ -60,15 +79,6 @@ else
     pip install -e .
     skyler init
     skyler create-app example /vagrant/examples/flaskexample
-
-    # kill me. don't ask me how I've googled it
-    # https://www.mail-archive.com/openstack@lists.launchpad.net/msg21895.html
-    modprobe -r bridge || true
-    apt-get -y install openvswitch-switch openvswitch-controller openvswitch-brcompat
-    echo "blacklist bridge" > /etc/modprobe.d/bridge.conf
-    echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
-    service openvswitch-switch restart
-    service docker restart
 
     touch /opt/openstack-installed
 fi

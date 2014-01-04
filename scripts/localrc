@@ -2,7 +2,7 @@ ADMIN_PASSWORD=pass
 MYSQL_PASSWORD=pass
 RABBIT_PASSWORD=pass
 SERVICE_PASSWORD=pass
-#ENABLED_SERVICES+=,savanna
+SERVICE_TOKEN=pass
 ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
 SCREEN_LOGDIR=/var/log/openstack
 LOG_COLOR=True
@@ -11,6 +11,7 @@ VIRT_DRIVER=docker
 RECLONE=no
 PUBLIC_INTERFACE=eth1
 
+# Enable neutron
 disable_service n-net
 enable_service q-svc
 enable_service q-agt
@@ -20,3 +21,6 @@ enable_service q-meta
 enable_service q-lbaas
 enable_service neutron
 
+# # Disable security groups entirely
+# Q_USE_SECGROUP=False
+# LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver

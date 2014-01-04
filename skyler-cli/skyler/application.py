@@ -104,6 +104,7 @@ class ApplicationSpinUpController(controller.CementBaseController):
 
         arguments = [
             (['name'], dict(action='store', help='Application name')),
+            (['--subnet'], dict(action='store_true', default=False, help='recreate subnet')),
         ]
 
     def spin_up(self):
@@ -124,7 +125,7 @@ class ApplicationSpinUpController(controller.CementBaseController):
         }
         heat_template = file(heatfile).read()
         heat_content = heat_template.format(**params)
-        stack_name = '{}_d{}'.format(target.application.name, target.id)
+        stack_name = '{}_d{}_10'.format(target.application.name, target.id)
         target.stack_name = stack_name
         #target.state = DEPLOYMENT_STATE_SUCCESSFUL
         session.add(target)
@@ -151,25 +152,37 @@ class ApplicationSpinUpController(controller.CementBaseController):
             raise SkylerException("No successful builds found")
         self.log.info('Last successful build #{}'.format(target.id))
 
-        if not target.application.network_id:
-            next_id = Neutron.find_new_id()
-            neutron = Neutron.client
-            net = IPNetwork(CONFIG.get('base', 'cidr_start')).next(next_id)
+        # FIXME revert subnet creation
+        if not target.application.network_id or self.pargs.subnet:
+        #     next_id = Neutron.find_new_id()
+        #     neutron = Neutron.client
+        #     net = IPNetwork(CONFIG.get('base', 'cidr_start')).next(next_id)
 
-            network = filter(lambda x: x['name'] == CONFIG.get('base', 'network'),
-                             neutron.list_networks()['networks'])[0]
-            subnet_name = 'sky-{}'.format(target.application.name)
-            self.log.info('Creating subnet {}'.format(subnet_name))
-            ret = neutron.create_subnet(body=dict(subnet=dict(name=subnet_name,
-                                                              network_id=network['id'],
-                                                              ip_version='4',
-                                                              cidr=str(net),
-                                                              tenant_id=network['tenant_id'])))
+        #     network = filter(lambda x: x['name'] == CONFIG.get('base', 'network'),
+        #                      neutron.list_networks()['networks'])[0]
+        #     subnet_name = 'sky-{}'.format(target.application.name)
+        #     self.log.info('Creating subnet {}'.format(subnet_name))
+        #     ret = neutron.create_subnet(body=dict(subnet=dict(name=subnet_name,
+        #                                                       network_id=network['id'],
+        #                                                       ip_version='4',
+        #                                                       cidr=str(net),
+        #                                                       tenant_id=network['tenant_id'],
+        #                                                       gateway_ip=CONFIG.get('base', 'gateway')
+        #                                                       )))
+        #     session = Session()
+        #     app = session.query(Application).filter(Application.id == target.id).first()
+        #     app.network_id = ret['subnet']['id']
+        #     session.add(app)
+        #     self.log.info('Subnet {} created'.format(app.network_id))
+        #     session.commit()
+            neutron = Neutron.client
+            network = filter(lambda x: x['name'] == CONFIG.get('base', 'subnet'),
+                             neutron.list_subnets()['subnets'])[0]
             session = Session()
             app = session.query(Application).filter(Application.id == target.id).first()
-            app.network_id = ret['subnet']['id']
+            app.network_id = network['id']
             session.add(app)
-            self.log.info('Subnet {} created'.format(app.network_id))
+            self.log.info('Subnet {} found'.format(app.network_id))
             session.commit()
 
         self.spin_up()

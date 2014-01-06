@@ -125,9 +125,9 @@ class ApplicationSpinUpController(controller.CementBaseController):
         }
         heat_template = file(heatfile).read()
         heat_content = heat_template.format(**params)
-        stack_name = '{}_d{}_10'.format(target.application.name, target.id)
+        stack_name = '{}_d{}'.format(target.application.name, target.id)
         target.stack_name = stack_name
-        #target.state = DEPLOYMENT_STATE_SUCCESSFUL
+        #target.state = DEPLOYMENT_STATE_SUCCESSFUL  # FIXME: uncomment
         session.add(target)
         self.log.info('Spinning up {}...'.format(stack_name))
         heat.stacks.create(stack_name=stack_name,
@@ -179,7 +179,7 @@ class ApplicationSpinUpController(controller.CementBaseController):
             network = filter(lambda x: x['name'] == CONFIG.get('base', 'subnet'),
                              neutron.list_subnets()['subnets'])[0]
             session = Session()
-            app = session.query(Application).filter(Application.id == target.id).first()
+            app = session.query(Application).filter(Application.id == target.application.id).first()
             app.network_id = network['id']
             session.add(app)
             self.log.info('Subnet {} found'.format(app.network_id))

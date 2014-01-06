@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+yum clean all
 yum -y install rsyslog openssh-server screen passwd sudo wget tar ntp bind-utils
 sed 's/UsePAM yes/UsePAM no/' -i /etc/ssh/sshd_config
 sed 's/#PermitRootLogin yes/PermitRootLogin yes/' -i /etc/ssh/sshd_config

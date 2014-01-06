@@ -6,23 +6,32 @@ Description:
 Parameters: {{}}
 
 Resources:
-    web:
+    web1:
         Type: OS::Nova::Server
         Properties:
             image: "{image_name}:latest"
             flavor: "m1.nano"
             networks: [ {{network: {network} }} ]
 
+    web2:
+        Type: OS::Nova::Server
+        Properties:
+            image: "{image_name}:latest"
+            flavor: "m1.nano"
+            networks: [ {{network: {network} }} ]
+
+
     monitor:
         Type: OS::Neutron::HealthMonitor
         Properties:
             type: HTTP
-            delay: 3
-            max_retries: 5
-            timeout: 10
+            delay: 15
+            max_retries: 10
+            timeout: 100
 
     pool:
         Type: OS::Neutron::Pool
+        DependsOn: monitor
         Properties:
             name: {name}_pool
             protocol: HTTP
@@ -34,17 +43,20 @@ Resources:
 
     load_balancer:
         Type: OS::Neutron::LoadBalancer
+        DependsOn: web1
+        DependsOn: web2
+        DependsOn: monitor
         Properties:
             pool_id: {{ "Ref": "pool" }}
             protocol_port: 8000
-            members: [ {{ "Ref": "web" }} ]
+            members: [ {{ "Ref": "web1" }}, {{ "Ref": "web2" }} ]
 
 Outputs:
     AppURL:
         Value:
             {{"Fn::Join": ["",
                 ["http://",
-                {{"Fn::GetAtt": ["pool", "first_address"]}}, ":",
+                {{"Fn::Select": ["address", {{"Fn::GetAtt": ["pool", "vip"]}}]}}, ":",
                 "8000", "/"]
             ]}}
         Description: Application URL

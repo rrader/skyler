@@ -9,24 +9,24 @@ else
     apt-get -y install curl git wget socat
 
 
-    # kill me. don't ask me how I've googled it
-    # https://www.mail-archive.com/openstack@lists.launchpad.net/msg21895.html
-    modprobe -r bridge || true
-    apt-get -y install openvswitch-switch openvswitch-controller openvswitch-brcompat
-    echo "blacklist bridge" > /etc/modprobe.d/bridge.conf
-    echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
+    # # kill me. don't ask me how I've googled it
+    # # https://www.mail-archive.com/openstack@lists.launchpad.net/msg21895.html
+    # modprobe -r bridge || true
+    # apt-get -y install openvswitch-switch openvswitch-controller openvswitch-brcompat
+    # echo "blacklist bridge" > /etc/modprobe.d/bridge.conf
+    # echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
 
-    # http://www.brucemartins.com/2013_10_01_archive.html
-    apt-get install -y openvswitch-datapath-source
-    module-assistant auto-install openvswitch-datapath --non-inter --quiet  # FIXME: no tty
-    modprobe -r bridge || true
-    service openvswitch-switch restart
+    # # http://www.brucemartins.com/2013_10_01_archive.html
+    # apt-get install -y openvswitch-datapath-source
+    # module-assistant auto-install openvswitch-datapath --non-inter --quiet  # FIXME: no tty
+    # modprobe -r bridge || true
+    # service openvswitch-switch restart
 
 
 
     cd /opt;
-    git clone https://github.com/openstack-dev/devstack.git; cd devstack
-    git checkout stable/havana
+    git clone https://github.com/antigluk/devstack.git; cd devstack
+    git checkout docker-downgrade
     source lib/nova_plugins/hypervisor-docker
     if [[ ! -r /vagrant/.cache/docker-registry.tar.gz ]]; then
         wget -O /vagrant/.cache/docker-registry.tar.gz ${DOCKER_REGISTRY_IMAGE};
@@ -56,10 +56,9 @@ else
 
     su - stack -c"cd /opt/devstack && source openrc && nova keypair-add default > default.pem && chmod 600 default.pem"
 
-    export OS_TENANT_NAME=demo
-    export OS_USERNAME=admin
-    export OS_PASSWORD=pass
-    export OS_AUTH_URL=http://127.0.0.1:5000/v2.0
+    source /opt/devstack/openrc
+    SUBNET=$(neutron subnet-list | grep private-subnet | awk '{ print $2 }')
+    
 
     # create neutron network
     # FIXME: for now disabled

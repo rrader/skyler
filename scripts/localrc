@@ -9,18 +9,41 @@ LOG_COLOR=True
 VERBOSE=True
 VIRT_DRIVER=docker
 RECLONE=no
-PUBLIC_INTERFACE=eth1
 
-# Enable neutron
+#PUBLIC_INTERFACE=eth1
+#FLOATING_RANGE=10.0.5.112/28
+#FLAT_INTERFACE=eth1
+#PUBLIC_NETWORK_GATEWAY=10.0.5.1
+#Q_FLOATING_ALLOCATION_POOL=start=10.0.5.113,end=10.0.5.126
+
+#FIXED_RANGE=10.0.0.0/24
+#NETWORK_GATEWAY=10.0.0.1
+
+# IP of vagrant box
+HOST_IP=172.16.0.201
+
+# Networks
+VLAN_INTERFACE=eth1
+FLAT_INTERFACE=eth1
+GUEST_INTERFACE=eth1
+PUBLIC_INTERFACE=eth2
+FIXED_RANGE=172.16.1.0/24
+NETWORK_GATEWAY=172.16.1.1  # ?
+FIXED_NETWORK_SIZE=256
+FLOATING_RANGE=10.10.1.0/24
+#Q_USE_NAMESPACE=False
+
+#Enable neutron
 disable_service n-net
-enable_service q-svc
-enable_service q-agt
-enable_service q-dhcp
-enable_service q-l3
-enable_service q-meta
-enable_service q-lbaas
-enable_service neutron
+enable_service q-svc q-agt q-dhcp q-l3 q-meta q-lbaas neutron
 
-# # Disable security groups entirely
-# Q_USE_SECGROUP=False
-# LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
+# Disable Cinder service
+disable_service c-api c-sch c-vol
+
+# Disable security groups entirely
+Q_USE_SECGROUP=False
+LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
+
+# neutron linuxbridge
+Q_PLUGIN=linuxbridge
+Q_AGENT=linuxbridge

@@ -6,7 +6,7 @@ defaults['base']['rabbitmq_host'] = 'localhost'
 defaults['base']['rabbitmq_user'] = 'guest'
 defaults['base']['rabbitmq_password'] = 'pass'
 
-defaults['base']['heat_endpoint'] = 'http://10.0.2.15:8004/v1'
+defaults['base']['heat_endpoint'] = 'http://172.16.0.201:8004/v1'
 defaults['base']['templates'] = '/vagrant/skyler-cli/skyler/templates'
 defaults['base']['docker-registry'] = 'localhost:5042'
 

@@ -47,3 +47,7 @@ LIBVIRT_FIREWALL_DRIVER=nova.virt.firewall.NoopFirewallDriver
 # neutron linuxbridge
 Q_PLUGIN=linuxbridge
 Q_AGENT=linuxbridge
+
+
+NOVA_REPO=https://github.com/antigluk/nova.git
+NOVA_BRANCH=bug/1266875

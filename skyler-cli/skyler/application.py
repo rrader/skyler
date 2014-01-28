@@ -1,7 +1,5 @@
 import datetime
-from clients.keystone_client import Keystone
 from clients.neutron_client import Neutron
-from netaddr import IPNetwork
 import os
 from cement.core import controller
 from texttable import Texttable
@@ -41,10 +39,10 @@ class ApplicationHistoryController(controller.CementBaseController):
         self.log.info('List deployments')
         table = Texttable()
         session = Session()
-        table.add_row(('deployment', 'app', 'image', 'created', 'state'))
+        table.add_row(('deployment', 'app', 'image', 'stack_name', 'created', 'state'))
         for d in session.query(Deployment). \
             join(Application).filter(Application.name == self.pargs.name).all():
-            table.add_row((d.id, d.application.name, d.image, d.created,
+            table.add_row((d.id, d.application.name, d.image, d.stack_name, d.created,
                            DEPLOYMENT_STATE_READABLE[d.state]))
         print table.draw()
 
@@ -187,6 +185,64 @@ class ApplicationSpinUpController(controller.CementBaseController):
 
         self.spin_up()
         self.log.info('Done')
+
+
+class ApplicationBuildController(controller.CementBaseController):
+    class Meta:
+        label = 'build'
+        description = 'build machines'
+
+        config_defaults = dict()
+
+        arguments = [
+            (['name'], dict(action='store', help='Application name')),
+        ]
+
+    @controller.expose(help='Build your Skyler app')
+    def default(self):
+        self.log.info('Building stack')
+        session = Session()
+        app = session.query(Application).filter(Application.name == self.pargs.name).first()
+        if not app:
+            self.log.error('No application found')
+            raise SkylerException("No application found")
+        runtime_name = file(os.path.join(app.source, 'runtime.txt')).read().strip()
+        rt = getattr(__import__('skyler.runtime', fromlist=[runtime_name]), runtime_name)
+        runtime = rt.Runtime(app.name)
+        runtime.start_deploy()
+
+
+class ApplicationHaltController(controller.CementBaseController):
+    class Meta:
+        label = 'halt'
+        description = 'halt stack'
+
+        config_defaults = dict()
+
+        arguments = [
+            (['name'], dict(action='store', help='Application name')),
+            (['--id'], dict(action='store', type=int, help='Deployment id', default=-1)),
+        ]
+
+    @controller.expose(hide=True, aliases=['list'])
+    def default(self):
+        self.log.info('Halting deployment')
+        session = Session()
+        d_id = self.pargs.id
+        if self.pargs.id >= 0:
+            d_id = self.pargs.id - 1  # numbering from 1
+
+        try:
+            deployment = session.query(Deployment).join(Application). \
+                filter(Application.name == self.pargs.name).all()[d_id]
+        except IndexError:
+            self.log.error('No such deployment')
+            return
+        self.log.info('Deployment #{}, stack "{}"'.format(deployment.id,
+                                                          deployment.stack_name))
+        heat = Heat.client
+        heat.stacks.delete(deployment.stack_name)  # TODO: error handling
+        self.log.info('Deployment destroyed')
 
 
 from clients.heat_client import Heat

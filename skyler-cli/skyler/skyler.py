@@ -21,7 +21,7 @@ class Skyler(foundation.CementApp):
 
 def main():
     from application import ApplicationListController, ApplicationCreationController, ApplicationBuildController, \
-        ApplicationHistoryController, ApplicationSpinUpController
+        ApplicationHistoryController, ApplicationSpinUpController, ApplicationHaltController
     from db import InitDBController
 
     app = Skyler('skyler')
@@ -31,6 +31,7 @@ def main():
     handler.register(ApplicationBuildController)
     handler.register(ApplicationHistoryController)
     handler.register(ApplicationSpinUpController)
+    handler.register(ApplicationHaltController)
     try:
         app.setup()
         app.run()

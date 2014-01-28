@@ -52,8 +52,8 @@ Q_AGENT=linuxbridge
 NOVA_REPO=https://github.com/antigluk/nova.git
 NOVA_BRANCH=bug/1266875
 
-NOVACLIENT_REPO=https://github.com/antigluk/python-novaclient.git
-NOVACLIENT_BRANCH=bug/1267429
+#NOVACLIENT_REPO=https://github.com/antigluk/python-novaclient.git
+#NOVACLIENT_BRANCH=bug/1267429
 
-HORIZON_REPO=https://github.com/antigluk/horizon.git
-HORIZON_BRANCH=bug/1268349
+#HORIZON_REPO=https://github.com/antigluk/horizon.git
+#HORIZON_BRANCH=bug/1268349

@@ -40,10 +40,11 @@ else
     chown stack:stack -R /opt/devstack
     su - stack -c"export PIP_DOWNLOAD_CACHE=/vagrant/.cache && bash /opt/devstack/stack.sh"
     echo "export OS_USERNAME=admin" >> openrc
-    echo "export OS_TENANT_NAME=admin" >> openrc
+    echo "export OS_TENANT_NAME=demo" >> openrc
     echo "export OS_PASSWORD=pass" >> openrc
     echo "export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/" >> openrc
     echo "export PS1='[\u@\h \W(keystone_admin)]\$ '" >> openrc
+    echo "source /opt/stack/skyler/venv/bin/activate" >> openrc
 
     #Docker plugin for Heat
     # TODO: remove this plugin (it works without Nova that is not appropriate)
